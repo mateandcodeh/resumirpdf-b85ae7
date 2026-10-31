@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ResumiPDF · Resumen local de PDFs</title>
+<meta name="theme-color" content="#0d1117">
+<style>
+:root{--bg: #ffffff;--panel: #f2f2f2;--border:#30363d;--tx: #1a1a1a;--sub: #555555;--ac: #ffffff;--ok:#2f9e6e;--err:#d64545;--warn:#d29922}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--tx);padding:16px;max-width:680px;margin:0 auto}
+header{display:flex;align-items:center;gap:10px;padding:6px 0 18px}
+h1{font-size:20px}
+.sub{font-size:12px;color:var(--sub);flex:1}
+.ico{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--ac),#6d28d9);display:flex;align-items:center;justify-content:center;font-size:18px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.card h2{font-size:15px;margin-bottom:4px}
+.card .d{font-size:12.5px;color:var(--sub);margin-bottom:12px}
+label{display:block;font-size:12px;color:var(--sub);margin:10px 0 4px}
+input[type=file]{width:100%;padding:10px;border:1px dashed var(--border);border-radius:10px;background:#0d1117;color:var(--tx);font:inherit;font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--ac),#6d28d9);color:#fff;font:inherit;font-size:14.5px;cursor:pointer;width:100%}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sec{background:transparent;border:1px solid var(--border);color:var(--tx)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row .btn{width:auto;flex:1}
+input[type=range]{width:100%}
+.bar{height:8px;border-radius:99px;background:#0d1117;border:1px solid var(--border);overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),#6d28d9);transition:width .25s}
+.stat{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:6px}
+.doc{border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:12px;background:#0d1117}
+.doc .t{font-size:14.5px;font-weight:600;word-break:break-all}
+.doc .m{font-size:12px;color:var(--sub);margin:4px 0 10px}
+.doc .res{font-size:13.5px;line-height:1.65;white-space:pre-wrap}
+.kw{display:inline-block;font-size:11.5px;background:#161b22;border:1px solid var(--border);border-radius:999px;padding:3px 10px;margin:2px 4px 2px 0;color:var(--ac)}
+.st{font-size:12px;margin-top:8px}
+.st.ok{color:var(--ok)}.st.er{color:var(--err)}.st.wa{color:var(--warn)}
+.log{font-family:ui-monospace,monospace;font-size:12px;background:#0d1117;border:1px solid var(--border);border-radius:10px;padding:10px;max-height:160px;overflow:auto;margin-top:12px;white-space:pre-wrap}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0}
+.chk input{width:auto}
+.hidden{display:none}
+/* campos a completar en blanco */
+input[type=file],input[type=number],input[type=text],input[type=password],textarea,select{
+  background:#ffffff !important;color:#111111 !important;border-color:#c9d1d9 !important}
+input::placeholder,textarea::placeholder{color:#6e7781 !important}
+input[type=file]{color:#111111 !important}
+</style>
+<style id="lf-tema">html,body{background:#ffffff !important;color:#1a1a1a !important;font-family:ui-monospace,Menlo,Consolas,monospace !important;font-size:19px !important}</style></head>
+<body>
+<header>
+  <div class="ico">📄</div>
+  <div><h1>ResumiPDF</h1><span class="sub">Resúmenes de PDFs de texto y escaneados · 100% local</span></div>
+</header>
+
+<div class="card">
+  <h2>1 · Elegí los PDF</h2>
+  <div class="d">Podés cargar varios. Los PDFs de texto se leen directo; los escaneados (fotos de libros/fotocopias) pasan por OCR en el dispositivo. Nada se sube a internet.</div>
+  <input type="file" id="files" accept="application/pdf,.pdf" multiple>
+  <label>Modo de resumen</label>
+  <select id="fModo" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#ffffff;color:#111111;font:inherit;font-size:14px">
+    <option value="corto" selected>Corto (~80 palabras)</option>
+    <option value="largo">Largo (~250 palabras)</option>
+    <option value="total">Sin límite (texto completo)</option>
+  </select>
+  <div class="row" style="margin-top:8px">
+    <div style="flex:1;min-width:120px"><label>Palabras · corto</label>
+      <input type="number" id="nCorto" value="80" min="10" inputmode="numeric" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#ffffff;color:#111111;font:inherit;font-size:14px"></div>
+    <div style="flex:1;min-width:120px"><label>Palabras · largo</label>
+      <input type="number" id="nLargo" value="250" min="10" inputmode="numeric" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#ffffff;color:#111111;font:inherit;font-size:14px"></div>
+  </div>
+  <div class="chk"><input type="checkbox" id="ocrOn" checked><label style="margin:0" for="ocrOn">Usar OCR para páginas sin texto (tarda más)</label></div>
+  <label>Límite de páginas por PDF (0 = todas)</label>
+  <input type="text" id="maxPag" value="0" inputmode="numeric" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0d1117;color:var(--tx);font:inherit">
+  <div style="margin-top:14px">
+    <button class="btn" id="bGo">✨ Resumir todo</button>
+    <button class="btn sec hidden" id="bCancel" style="margin-top:8px">⛔ Cancelar</button>
+  </div>
+  <div class="bar hidden" id="bar"><i id="barI"></i></div>
+  <div class="log hidden" id="log"></div>
+</div>
+
+<div class="card hidden" id="out">
+  <h2>2 · Resultados</h2>
+  <div class="d">Resumen extractivo: las oraciones más relevantes, en su orden original.</div>
+  <div id="docs"></div>
+  <div style="margin-top:14px" class="row">
+    <button class="btn sec" id="bCopy">📋 Copiar todo</button>
+    <button class="btn sec" id="bTxt">⬇️ Descargar .txt</button>
+    <button class="btn sec" id="bPdf">📄 Descargar PDF</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const $ = id => document.getElementById(id);
+let cancelado = false, ocrWorker = null;
+
+function log(m){ $('log').classList.remove('hidden'); $('log').textContent += m + '\n'; $('log').scrollTop = $('log').scrollHeight; }
+function setBar(p){ $('bar').classList.remove('hidden'); $('barI').style.width = Math.round(p*100) + '%'; }
+
+/* ---------- stopwords en español ---------- */
+const STOP = new Set(("a,al,algo,alguna,algunas,alguno,algunos,ante,antes,como,con,contra,cual,cuales,cuando,de,del,desde,donde,durante,e,el,ella,ellas,ellos,en,entre,era,erais,eran,eras,eres,es,esa,esas,ese,eso,esos,esta,estaba,estabais,estaban,estabas,estad,estada,estadas,estado,estados,estamos,estando,estar,estaremos,estaria,estarias,estaran,estas,este,esto,estos,estoy,fue,fuera,fuerais,fueran,fueras,fueron,fui,fuimos,ha,habeis,habia,habiais,habian,habias,habida,habidas,habido,habidos,habiendo,habra,habran,hay,haya,hayamos,hayan,hayas,he,hemos,hube,hubiera,hubierais,hubieran,hubieras,hubieron,hubimos,hubo,la,las,le,les,lo,los,mas,me,mi,mia,mias,mio,mios,muy,nada,ni,no,nos,nosotras,nosotros,o,os,otra,otras,otro,otros,para,pero,poco,pocos,por,pues,que,quien,quienes,se,sea,seais,sean,seas,ser,sido,siendo,sin,sobre,sois,somos,son,soy,su,sus,suya,suyas,suyo,suyos,te,teneis,tendra,tendran,tenemos,tener,tenia,teniais,tenian,tenias,ti,tiene,tienen,tienes,todo,todos,tu,tus,tuya,tuyas,tuyo,tuyos,un,una,uno,unos,y,ya,asi,solo,cada,tambien,aun,aunque,mientras,hasta,donde,entonces,ademas").split(","));
+
+/* ---------- resumen extractivo ---------- */
+function palabras(t){ return (t.toLowerCase().match(/[a-záéíóúñü]{4,}/g) || []); }
+function resumir(texto, maxPalabras){
+  const limpio = texto.replace(/\s+/g,' ').trim();
+  if (!limpio) return { resumen: '', kw: [] };
+  const oraciones = limpio.match(/[^.!?…\n]+[.!?…]+/g) || [limpio];
+  const freq = {};
+  palabras(limpio).forEach(w => { if (!STOP.has(w)) freq[w] = (freq[w]||0)+1; });
+  const max = Math.max(1, ...Object.values(freq));
+  const kw = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8).map(e=>e[0]);
+  const contar = s => (s.match(/\S+/g) || []).length;
+  const totalPal = oraciones.reduce((a,o) => a + contar(o), 0);
+  if (maxPalabras && totalPal <= maxPalabras) return { resumen: oraciones.join(' '), kw };
+  const punt = oraciones.map((o,i) => {
+    const toks = palabras(o).filter(w => !STOP.has(w));
+    if (!toks.length) return { o, i, s: 0 };
+    const s = toks.reduce((a,w)=> a + freq[w]/max, 0) / Math.sqrt(toks.length);
+    return { o, i, s };
+  }).filter(x => x.s > 0);
+  if (!maxPalabras) {
+    // sin límite: resumen extenso = mejor 50% de oraciones por relevancia
+    const mitad = Math.max(3, Math.ceil(punt.length / 2));
+    const extensas = punt.slice().sort((a,b)=>b.s-a.s).slice(0, mitad).sort((a,b)=>a.i-b.i);
+    return { resumen: extensas.map(x => x.o.trim()).join(' '), kw };
+  }
+  const elegidas = [];
+  let pal = 0;
+  for (const x of punt.slice().sort((a,b)=>b.s-a.s)) {
+    elegidas.push(x); pal += contar(x.o);
+    if (pal >= maxPalabras) break;
+  }
+  elegidas.sort((a,b)=>a.i-b.i);
+  return { resumen: elegidas.map(x => x.o.trim()).join(' '), kw };
+}
+
+/* ---------- extracción de texto ---------- */
+async function textoDePagina(page){
+  const tc = await page.getTextContent();
+  const txt = tc.items.map(it => it.str).join(' ').trim();
+  return txt.length >= 25 ? txt : null;
+}
+async function ocrDePagina(page){
+  const viewport = page.getViewport({ scale: 2 });
+  const c = document.createElement('canvas');
+  c.width = viewport.width; c.height = viewport.height;
+  await page.render({ canvasContext: c.getContext('2d'), viewport }).promise;
+  if (!ocrWorker) ocrWorker = await Tesseract.createWorker('spa');
+  const r = await ocrWorker.recognize(c);
+  return (r.data.text || '').trim();
+}
+async function extraerPdf(buf, usarOcr, maxPag, onProg){
+  const doc = await pdfjsLib.getDocument({ data: buf, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked: true }).promise;
+  const total = Math.min(doc.numPages, maxPag > 0 ? maxPag : doc.numPages);
+  let texto = '', ocrPag = 0;
+  for (let p = 1; p <= total; p++){
+    if (cancelado) throw new Error('cancelado');
+    const page = await doc.getPage(p);
+    let t = await textoDePagina(page);
+    if (!t && usarOcr){ t = await ocrDePagina(page); if (t) ocrPag++; }
+    texto += (t || '') + ' ';
+    onProg(p / total);
+  }
+  return { texto: texto.trim(), paginas: total, ocrPag };
+}
+
+/* ---------- flujo principal ---------- */
+$('bGo').onclick = async () => {
+  const fs = Array.from($('files').files);
+  if (!fs.length){ alert('Elegí al menos un PDF.'); return; }
+  const modo = $('fModo').value;
+  let maxPal = 0;
+  if (modo === 'corto') maxPal = Math.max(10, Math.round(+$('nCorto').value) || 80);
+  else if (modo === 'largo') maxPal = Math.max(10, Math.round(+$('nLargo').value) || 250);
+  const usarOcr = $('ocrOn').checked;
+  const maxPag = parseInt($('maxPag').value) || 0;
+  cancelado = false;
+  $('bGo').disabled = true; $('bCancel').classList.remove('hidden');
+  $('docs').innerHTML = ''; $('out').classList.add('hidden');
+  $('log').textContent = ''; $('barI').style.width = '0%';
+  const resultados = [];
+  let done = 0;
+  for (const f of fs){
+    if (cancelado) break;
+    log('▶ ' + f.name);
+    const card = document.createElement('div'); card.className = 'doc';
+    card.innerHTML = '<div class="t">📄 ' + f.name + '</div><div class="st wa">Procesando…</div>';
+    $('docs').appendChild(card);
+    try {
+      const buf = await f.arrayBuffer();
+      const { texto, paginas, ocrPag } = await extraerPdf(buf, usarOcr, maxPag, p => setBar((done + p) / fs.length));
+      if (texto.split(/\s+/).length < 30) throw new Error('No se pudo extraer texto suficiente (¿PDF muy oscuro o en otro idioma?).');
+      const { resumen, kw } = resumir(texto, maxPal);
+      const mins = Math.max(1, Math.round(texto.split(/\s+/).length / 200));
+      card.innerHTML =
+        '<div class="t">📄 ' + f.name + '</div>' +
+        '<div class="m">' + paginas + ' págs · ' + texto.split(/\s+/).length + ' palabras · ~' + mins + ' min de lectura' +
+        (ocrPag ? ' · ' + ocrPag + ' con OCR' : '') + '</div>' +
+        (kw.length ? '<div>' + kw.map(k=>'<span class="kw">#' + k + '</span>').join('') + '</div>' : '') +
+        '<div class="res" style="margin-top:10px">' + resumen + '</div>';
+      resultados.push('===== ' + f.name + ' =====\n' + resumen);
+      log('✓ ' + f.name + ' listo');
+    } catch (e){
+      card.querySelector('.st').className = 'st er';
+      card.querySelector('.st').textContent = '✗ ' + (e.message === 'cancelado' ? 'Cancelado.' : e.message);
+      log('✗ ' + f.name + ': ' + e.message);
+    }
+    done++; setBar(done / fs.length);
+  }
+  if (ocrWorker){ try { await ocrWorker.terminate(); } catch(e){} ocrWorker = null; }
+  $('bGo').disabled = false; $('bCancel').classList.add('hidden');
+  if (resultados.length){
+    $('out').classList.remove('hidden');
+    $('out').scrollIntoView({ behavior: 'smooth' });
+    $('bCopy').onclick = () => navigator.clipboard.writeText(resultados.join('\n\n')).then(()=>alert('Copiado ✓'));
+    $('bTxt').onclick = () => {
+      const blob = new Blob([resultados.join('\n\n')], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'resumenes.txt';
+      a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+    };
+    $('bPdf').onclick = () => {
+      try {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+          alert('La librería PDF no cargó (¿sin internet en el primer uso?). Probá de nuevo con conexión, o usá "Descargar .txt".');
+          return;
+        }
+        const doc = new jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+        const W = 180; let y = 20;
+        const limpiar = t => String(t).replace(/[^\x20-\xFF\n]/g, '').replace(/\u2022/g, '-');
+        doc.setFontSize(16); doc.setTextColor(109, 40, 217);
+        doc.text('ResumiPDF - Resumenes', 15, y); y += 8;
+        doc.setFontSize(9); doc.setTextColor(120);
+        doc.text('Generado el ' + new Date().toLocaleString('es-AR') + ' - procesamiento 100% local', 15, y); y += 4;
+        doc.setDrawColor(139, 92, 246); doc.line(15, y, 195, y); y += 8;
+        resultados.forEach(bloque => {
+          const lineas = doc.splitTextToSize(limpiar(bloque), W);
+          const alto = lineas.length * 5 + 10;
+          if (y + alto > 285) { doc.addPage(); y = 20; }
+          doc.setFontSize(10); doc.setTextColor(30);
+          doc.text(lineas, 15, y);
+          y += alto;
+        });
+        // 1) igual que el .txt: blob + enlace (funciona en el WebView)
+        try {
+          const blob = doc.output('blob');
+          const u = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = u; a.download = 'resumenes.pdf';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(u), 10000);
+        } catch (e1) {
+          // 2) alternativa: abrir en el navegador del sistema (Capacitor)
+          const du = doc.output('datauristring');
+          if (window.Capacitor) window.open(du, '_system');
+          else location.href = du;
+        }
+      } catch (e) { alert('No se pudo generar el PDF: ' + e.message); }
+    };
+  }
+};
+$('bCancel').onclick = () => { cancelado = true; log('⛔ Cancelando…'); };
+</script>
+</body>
+</html>
